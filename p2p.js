@@ -96,6 +96,27 @@ const swarm = Swarm(config);
           });
           console.log("-----------RECEIVE_NEXT_BLOCK-------------");
           break;
+        case MessageType.REQUEST_ALL_REGISTER_MINERS:
+          console.log(
+            "-----------REQUEST_ALL_REGISTER_MINERS-------------" + message.to
+          );
+          writeMessageToPeers(
+            MessageType.REQUEST_ALL_REGISTER,
+            registeredMiners
+          );
+          registeredMiners = JSON.parse(JSON.stringify(message.data));
+          console.log(
+            "-----------REQUEST_ALL_REGISTER_MINERS-------------" + message.to
+          );
+          break;
+
+        case MessageType.REGISTER_MINER:
+          console.log("-----------REGISTER_MINER-------------" + message.to);
+          let miners = JSON.stringify(message.data);
+          registeredMiners = JSON.parse(miners);
+          console.log(registeredMiners);
+          console.log("----------- REGISTER_MINER-------------" + message.to);
+          break;
       }
     });
 
