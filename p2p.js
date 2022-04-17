@@ -4,23 +4,29 @@ const defaults = require("dat-swarm-defaults");
 const getPort = require("get-port");
 const chain = require("./chain");
 
-// Set your variables to hold an object with the peers and connection sequence
+let registeredMiners = [];
+let lastBlockMinedBy = null;
+
+// Set variables to hold an object with the peers and connection sequence
 const peers = {};
 let connSeq = 0;
 
-//choose a channel name that all your nodes will be connecting to
+//choose a channel name that all nodes will be connecting to
 let channel = "myBlockchain";
 
 // define a message type to request and receive the latest block
 let MessageType = {
   REQUEST_BLOCK: "requestBlock",
   RECEIVE_NEXT_BLOCK: "receiveNextBlock",
+  RECEIVE_NEXT_BLOCK: "receiveNextBlock",
+  REQUEST_ALL_REGISTER_MINERS: "requestAllRegisterMiners",
+  REGISTER_MINER: "registerMiner",
 };
 
 const myPeerId = crypto.randomBytes(32);
 console.log("myPeerId: " + myPeerId.toString("hex"));
 
-// generate a config object that holds your peer ID
+// generate a config object that holds peer ID
 const config = defaults({
   id: myPeerId,
 });
