@@ -25,6 +25,9 @@ let MessageType = {
 const myPeerId = crypto.randomBytes(32);
 console.log("myPeerId: " + myPeerId.toString("hex"));
 
+// create a database once you start the code the first time
+chain.createDb(myPeerId.toString("hex"));
+
 // generate a config object that holds your peer ID
 const config = defaults({
   id: myPeerId,

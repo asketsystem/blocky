@@ -3,6 +3,7 @@
         "merkle",
         "nounce",
         "Ooops",
+        "secp",
         "txns"
     ]
 }
