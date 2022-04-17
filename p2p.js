@@ -168,3 +168,12 @@ setTimeout(function () {
     index: chain.getLatestBlock().index + 1,
   });
 }, 5000);
+
+// using a setTimeout function to update the list of registered miners you are mining to every 5 seconds
+setTimeout(function () {
+  registeredMiners.push(myPeerId.toString("hex"));
+  console.log(`----- Register my miner ------------------`);
+  console.log(registeredMiners);
+  writeMessageToPeers(MessageType.REGISTER_MINER, registeredMiners);
+  console.log(`----- Register my miner ------------------`);
+}, 7000);
