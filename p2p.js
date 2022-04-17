@@ -3,17 +3,17 @@ const Swarm = require("discovery-swarm");
 const defaults = require("dat-swarm-defaults");
 const getPort = require("get-port");
 
-// Set your variables to hold an object with the peers and connection sequence
+// Set variables to hold an object with the peers and connection sequence
 const peers = {};
 let connSeq = 0;
 
-//choose a channel name that all your nodes will be connecting to
+//choose a channel name that all nodes will be connecting to
 let channel = "myBlockchain";
 
 const myPeerId = crypto.randomBytes(32);
 console.log("myPeerId: " + myPeerId.toString("hex"));
 
-// generate a config object that holds your peer ID
+// generate a config object that holds peer ID
 const config = defaults({
   id: myPeerId,
 });
