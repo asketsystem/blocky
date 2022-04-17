@@ -2,18 +2,25 @@ const crypto = require("crypto");
 const Swarm = require("discovery-swarm");
 const defaults = require("dat-swarm-defaults");
 const getPort = require("get-port");
+const chain = require("./chain");
 
-// Set variables to hold an object with the peers and connection sequence
+// Set your variables to hold an object with the peers and connection sequence
 const peers = {};
 let connSeq = 0;
 
-//choose a channel name that all nodes will be connecting to
+//choose a channel name that all your nodes will be connecting to
 let channel = "myBlockchain";
+
+// define a message type to request and receive the latest block
+let MessageType = {
+  REQUEST_BLOCK: "requestBlock",
+  RECEIVE_NEXT_BLOCK: "receiveNextBlock",
+};
 
 const myPeerId = crypto.randomBytes(32);
 console.log("myPeerId: " + myPeerId.toString("hex"));
 
-// generate a config object that holds peer ID
+// generate a config object that holds your peer ID
 const config = defaults({
   id: myPeerId,
 });
@@ -53,6 +60,37 @@ const swarm = Swarm(config);
         "type: " + JSON.stringify(message.type)
       );
       console.log("----------- Received Message end -------------");
+
+      /* 
+              once a connection data event message is received, you can create your switch 
+              code to handle the different types of requests
+        */
+      switch (message.type) {
+        case MessageType.REQUEST_BLOCK:
+          console.log("-----------REQUEST_BLOCK-------------");
+          let requestedIndex = JSON.parse(JSON.stringify(message.data)).index;
+          let requestedBlock = chain.getBlock(requestedIndex);
+          if (requestedBlock)
+            writeMessageToPeerToId(
+              peerId.toString("hex"),
+              MessageType.RECEIVE_NEXT_BLOCK,
+              requestedBlock
+            );
+          else console.log("No block found @ index: " + requestedIndex);
+          console.log("-----------REQUEST_BLOCK-------------");
+          break;
+        case MessageType.RECEIVE_NEXT_BLOCK:
+          console.log("-----------RECEIVE_NEXT_BLOCK-------------");
+          chain.addBlock(JSON.parse(JSON.stringify(message.data)));
+          console.log(JSON.stringify(chain.blockchain));
+          let nextBlockIndex = chain.getLatestBlock().index + 1;
+          console.log("-- request next block @ index: " + nextBlockIndex);
+          writeMessageToPeers(MessageType.REQUEST_BLOCK, {
+            index: nextBlockIndex,
+          });
+          console.log("-----------RECEIVE_NEXT_BLOCK-------------");
+          break;
+      }
     });
 
     /*  
@@ -75,11 +113,6 @@ const swarm = Swarm(config);
     connSeq++;
   });
 })();
-
-// using a setTimeout Node.js native function to send a message after ten seconds to any available peers
-setTimeout(function () {
-  writeMessageToPeers("hello", null);
-}, 10000);
 
 // writeMessageToPeers method will be sending messages to all the connected peers
 writeMessageToPeers = (type, data) => {
@@ -122,3 +155,10 @@ sendMessage = (id, type, data) => {
     })
   );
 };
+
+// using a setTimeout function to send a message send a request to retrieve the latest block every 5 seconds
+setTimeout(function () {
+  writeMessageToPeers(MessageType.REQUEST_BLOCK, {
+    index: chain.getLatestBlock().index + 1,
+  });
+}, 5000);
