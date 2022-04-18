@@ -4,6 +4,9 @@ const defaults = require("dat-swarm-defaults");
 const getPort = require("get-port");
 const chain = require("./chain");
 const CronJob = require("cron").CronJob;
+const express = require("express");
+const bodyParser = require("body-parser");
+const wallet = require("./wallet");
 
 // Set your variables to hold an object with the peers and connection sequence
 const peers = {};
@@ -25,8 +28,38 @@ let MessageType = {
 const myPeerId = crypto.randomBytes(32);
 console.log("myPeerId: " + myPeerId.toString("hex"));
 
-// create a database once you start the code the first time
+// create a database once you start the code
 chain.createDb(myPeerId.toString("hex"));
+
+// create a method called initHttpServer that will initiate the server and create the services
+let initHttpServer = (port) => {
+  let http_port = "80" + port.toString().slice(-2);
+  let app = express();
+  app.use(bodyParser.json());
+
+  //  Blocks service will be retrieving all of your blocks
+  app.get("/blocks", (req, res) => res.send(JSON.stringify(chain.blockchain)));
+
+  // getBlock service will be retrieving one block based on an index
+  app.get("/getBlock", (req, res) => {
+    let blockIndex = req.query.index;
+    res.send(chain.blockchain[blockIndex]);
+  });
+
+  //  getDBBlock service will be retrieving a LevelDB database entry based on an index
+  app.get("/getDBBlock", (req, res) => {
+    let blockIndex = req.query.index;
+    chain.getDbBlock(blockIndex, res);
+  });
+
+  //getWallet service will be utilizing the wallet.js file you created in the previous step and generate your public-private key pair
+  app.get("/getWallet", (req, res) => {
+    res.send(wallet.initWallet());
+  });
+  app.listen(http_port, () =>
+    console.log("Listening http on port: " + http_port)
+  );
+};
 
 // generate a config object that holds your peer ID
 const config = defaults({
@@ -39,6 +72,8 @@ const swarm = Swarm(config);
 (async () => {
   // listen on the random port selected
   const port = await getPort();
+
+  initHttpServer(port); // call the initHttpServer
 
   swarm.listen(port);
   console.log("Listening port: " + port);
@@ -72,7 +107,7 @@ const swarm = Swarm(config);
       /* 
               once a connection data event message is received, you can create your switch 
               code to handle the different types of requests
-        */
+            */
       switch (message.type) {
         case MessageType.REQUEST_BLOCK:
           console.log("-----------REQUEST_BLOCK-------------");
